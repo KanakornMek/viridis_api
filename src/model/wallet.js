@@ -5,4 +5,4 @@ const walletschema= new mongoose.Schema({
     totalTokens:Number
 })
 const wallet = mongoose.model('wallet',walletschema);
-module.exports(wallet);
+module.exports=wallet;
