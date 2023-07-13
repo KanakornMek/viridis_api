@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const walletschema= new mongoose.Schema({
-    
+    userId : mongoose.Types.ObjectId,
     totalPoints:Number,
     totalTokens:Number
 })
