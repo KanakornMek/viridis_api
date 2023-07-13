@@ -1,24 +1,26 @@
 const jwt =require('jsonwebtoken')
+const fs = require('fs');
+
+const publickey = fs.readFileSync((__dirname.split('src/utils'))[0] + 'public.key')
+
 function verifyToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     if (typeof authHeader !== 'undefined') {
       const token = authHeader.split(' ')[1];
-  
-      // Verify the token
-      jwt.verify(token, 'praram', (err, decoded) => {
+     
+      jwt.verify(token, publickey, (err, decoded) => {
         if (err) {
-          // Token verification failed
+          
           return res.sendStatus(403);
         }
         
-        // Token is valid, store the decoded payload for future use
+        
         req.user = decoded;
         
-        // Call the next middleware
         next();
       });
     } else {
-      // No authorization header present
+      
       res.sendStatus(401);
     }
 }

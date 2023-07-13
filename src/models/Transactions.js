@@ -3,7 +3,7 @@ const Transactionsschema =new mongoose.Schema({
     userId : mongoose.Types.ObjectId,
     purchaseDate: Date,
     tokenPrice :mongoose.Types.Decimal128,
-    amtToken:String,
+    amtToken:Number,
     totalPrice:Number,
     point:Number,
     paymentId :Number
