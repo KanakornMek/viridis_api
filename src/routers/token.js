@@ -18,6 +18,9 @@ router.get('/purchase', async (req, res) => {
         totalPrice,
         point : totalPrice,
         paymentId : Date.now()})
+
+    userpurchsae.save();
+    res.send(userpurchsae);
     
     
 })
