@@ -19,10 +19,7 @@ app.use('/', verifyToken);
 
 app.use('/token', tokenRouter);
 
-/*const a =await findbyId(Id).exec()
-a.price
-res.json(a)//ส่งrespond
-const price = pricetoken.findone().exec()*/
+
 
 app.listen(port, () => {
     console.log(`listening to port ${port}`)
