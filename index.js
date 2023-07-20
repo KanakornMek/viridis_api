@@ -18,7 +18,7 @@ app.get("/user/profile/:id", (req, res) => {
 });
 app.get("/user/wallet/:id", (req, res) => {
   wallet
-    .findById(req.params.id)
+    .findOne({ userId: req.params.id })
     .then((Wallet) => {
       if (!Wallet) {
         return res.status(404).send();
@@ -31,7 +31,7 @@ app.get("/user/wallet/:id", (req, res) => {
 });
 app.get("/user/transaction/:id", (req, res) => {
   transaction
-    .findById(req.params.id)
+    .findOne({ userId: req.params.id })
     .then((Transaction) => {
       if (!Transaction) {
         return res.status(404).send();
@@ -42,4 +42,4 @@ app.get("/user/transaction/:id", (req, res) => {
       res.status(500).send(error);
     });
 });
-app.listen(3000, (req, res) => console.log("running on port 3000"));
+app.listen(3000, () => console.log("running on port 3000"));
