@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Transactionsschema =new mongoose.Schema({
     userId : mongoose.Types.ObjectId,
     purchaseDate: Date,
-    tokenPrice :mongoose.Types.Decimal128,
+    tokenPrice :Number,
     amtToken:Number,
     totalPrice:Number,
     point:Number,
