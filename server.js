@@ -1,14 +1,25 @@
 const express = require('express');
-require('dotenv').config()
+const mongoose = require('mongoose')
 const app = express();
+require('dotenv').config();
+const verifyToken = require('./src/utils/verifyjwt')
+const tokenRouter = require('./src/routers/token')
+
+
+app.use(express.json());
 
 const port = 4000;
+mongoose.connect(process.env.MONGO_URL)
+mongoose.connection.on('connected', () => {
+    console.log('connected to database')
+})
+app.use('/', verifyToken);
 
-const tokenRouter = require('./routers/token')
-const userRouter = require('./routers/user')
+ 
 
 app.use('/token', tokenRouter);
-app.use('/user', userRouter);
+
+
 
 app.listen(port, () => {
     console.log(`listening to port ${port}`)
