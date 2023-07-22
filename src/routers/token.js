@@ -5,9 +5,7 @@ const User = require('../models/User');
 const Token = require('../models/Token');
 const Transactions = require('../models/Transactions')
 
-router.get('/', (req, res) => {
-    res.send(req.user.userId)
-})
+
 
 router.get('/purchase', async (req, res) => {
     if(!req.body.amtToken) return res.status(400).send()

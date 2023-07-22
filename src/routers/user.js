@@ -1,13 +1,12 @@
+const express = require("express");
+const router = express.Router();
 const User = require("../models/User");
 const Transactions = require("../models/Transactions");
 const Wallet = require("../models/Wallet");
+const genCert = require("../utils/certGen/certGen");
+const { nanoid } = require("nanoid");
 
-const express = require("express");
-const router = express.Router();
-
-router.get("/", (req, res) => res.send(req.user.userId));
-
-router.get("/user", async (req, res) => {
+router.get("/profile", async (req, res) => {
   try {
     const user = await User.findOne({ _id: req.user.userId });
     if (!user) {
@@ -30,7 +29,39 @@ router.get("/wallet", async (req, res) => {
     res.status(500).send(err);
   }
 });
+router.get("/generate-cert", async (req, res) => {
+  try {
+    const { month, year, userId } = req.body;
 
+    const user = User.findById(userId);
+    const startOfMonth = new Date(2023, 6, 1);
+    const endOfMonth = new Date(2023, 6, 31, 11, 59, 59);
+    let a = "";
+    const sumTransaction = await Transactions.aggregate([
+      { $match: { purchaseDate: { $gte: startOfMonth, $lt: endOfMonth } } },
+      { $group: { _id: null, totalSum: { $sum: "$amtToken" } } },
+    ]);
+    console.log(sumTransaction);
+    if (month >= 10) {
+      a = month.toString();
+    } else {
+      a = "0" + month.toString();
+    }
+    const formData = {
+      cert_number: (year % 100).toString() + a + nanoid(5),
+      name: "rammy",
+      amt_credit: sumTransaction[0].totalSum.toString(),
+    };
+    const certBytes = genCert(formData);
+    res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(certBytes);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  
+  }
+});
 router.get("/transaction", async (req, res) => {
   try {
     const transaction = await Transactions.findOne({ userId: req.user.userId });
