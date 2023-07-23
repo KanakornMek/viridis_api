@@ -34,14 +34,13 @@ router.get("/generate-cert", async (req, res) => {
     const { month, year, userId } = req.body;
 
     const user = User.findById(userId);
-    const startOfMonth = new Date(2023, 6, 1);
-    const endOfMonth = new Date(2023, 6, 31, 11, 59, 59);
+    const startOfMonth = new Date(year, month-1, 1);
+    const endOfMonth = new Date(year, month-1, 31, 11, 59, 59);
     let a = "";
     const sumTransaction = await Transactions.aggregate([
       { $match: { purchaseDate: { $gte: startOfMonth, $lt: endOfMonth } } },
       { $group: { _id: null, totalSum: { $sum: "$amtToken" } } },
     ]);
-    console.log(sumTransaction);
     if (month >= 10) {
       a = month.toString();
     } else {
@@ -49,13 +48,13 @@ router.get("/generate-cert", async (req, res) => {
     }
     const formData = {
       cert_number: (year % 100).toString() + a + nanoid(5),
-      name: "rammy",
+      name: user.firstname + user.lastname,
       amt_credit: sumTransaction[0].totalSum.toString(),
     };
-    const certBytes = genCert(formData);
-    res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
-    res.setHeader("Content-Type", "application/pdf");
-    res.send(certBytes);
+    const certBuffer = await genCert(formData);
+      res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
+      res.setHeader("Content-Type", "application/pdf");
+      res.send(certBuffer);
   } catch (err) {
     console.log(err);
     res.status(500).send(err);

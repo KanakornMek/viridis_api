@@ -5,7 +5,6 @@ const app = express();
 const path = require('path');
 
 const pdfFilePath = path.join(__dirname, 'template.pdf');
-
 async function genCert(formData) {
   try {
     
@@ -23,10 +22,9 @@ async function genCert(formData) {
    
     const pdfBytes = await pdfDoc.save();
     
-    await fs.promises.writeFile("./output.pdf", pdfBytes);
+    var pdfBuffer = Buffer.from(pdfBytes.buffer, 'binary');
     
-    
-   return pdfBytes;
+   return pdfBuffer;
   } catch (err) {
     console.error('Error filling PDF form:', err);
     res.status(500).send('Internal Server Error');
