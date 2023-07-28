@@ -6,9 +6,14 @@ mongoose.connection.on('connected', () => {
     console.log('connected to database')
 })
 
-const newToken = new Token({
-    name: 'viridis token',
-    availableToken: 100000,
-    price: 1
+const transactions = require('./src/models/Transactions');
+const newtan = new transactions({
+    purchaseDate : new Date(),
+    userId :new mongoose.Types.ObjectId('64acd189fa3ec41b59f7ac0d'),
+    totalPrice :5,
+    amtToken :65
+
 })
-setTimeout(() => newToken.save(), 5000)
+
+
+setTimeout(() => newtan.save(), 5000)

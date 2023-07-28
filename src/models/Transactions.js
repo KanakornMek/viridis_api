@@ -6,8 +6,8 @@ const Transactionsschema =new mongoose.Schema({
     amtToken:Number,
     totalPrice:Number,
     point:Number,
-    paymentId :Number
-    
+    paymentId :Number,
+    status: Boolean
 })
 const Transactions =mongoose.model('Transaction',Transactionsschema);
 module.exports=Transactions;
