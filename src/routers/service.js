@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const wallet = require("../models/Wallet");
 const verifyToken = require("../utils/verifyjwt");
+const qr =require("qrcode")
 
 router.post("/purchase", async (req, res) => {
     console.log(req.path)
@@ -52,7 +53,7 @@ router.post("/purchase", async (req, res) => {
     }
 })
 
-router.post("/generateQR", verifyToken , async (req, res) => {
+router.post("/generateQR" , async (req, res) => {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ message: 'user not found' });
     if (!user.serviceAcc) return res.status(400).json({ message: 'not a service Account' })
