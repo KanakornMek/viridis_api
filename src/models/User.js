@@ -2,14 +2,9 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema
 
 const userSchema = new Schema({
-    firstname: {
-        type: String, 
-        required: true
-    },
-    lastname: {
-        type: String,
-        required: true
-    },
+    firstname: String,
+    lastname: String,
+    companyName: String,
     email: {
         type: String, 
         unique: true,
@@ -18,7 +13,10 @@ const userSchema = new Schema({
     },
     phoneNumber: String,
     verifyToken: String,
-    isVerified: Boolean
+    isVerified: Boolean,
+    type: String,
+    serviceAcc: Boolean,
+    serviceId: mongoose.Schema.Types.ObjectId,
 })
 
 const User = mongoose.model('User', userSchema, 'Users');
