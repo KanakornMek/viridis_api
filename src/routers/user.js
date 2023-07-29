@@ -38,7 +38,7 @@ router.get("/generate-cert", async (req, res) => {
     const endOfMonth = new Date(year, month - 1, 31, 11, 59, 59);
     let a = "";
     const sumTransaction = await Transactions.aggregate([
-      { $match: { purchaseDate: { $gte: startOfMonth, $lt: endOfMonth } } },
+      { $match: { userId: userId ,purchaseDate: { $gte: startOfMonth, $lt: endOfMonth } } },
       { $group: { _id: null, totalSum: { $sum: "$amtToken" } } },
     ]);
     if (month >= 10) {
