@@ -1,18 +1,21 @@
 const express = require("express");
+const axios = require("axios");
+const qs = require("querystring")
 const router = express.Router();
 const User = require("../models/User");
 const wallet = require("../models/Wallet");
 const verifyToken = require("../utils/verifyjwt");
 const qr = require("qrcode");
 const ServiceAcc = require("../models/ServiceAcc");
+const Transactions = require("../models/Transactions");
 
 router.post("/purchase", async (req, res) => {
-    let { amtToken, tokenPrice, phoneNumber, sourceId } = req.body;
+    let { amtToken, tokenPrice, totalPrice , phoneNumber, sourceId, type } = req.body;
     if (!req.body.amtToken) return res.status(400).send();
     amtToken = parseInt(amtToken);
     tokenPrice = parseInt(tokenPrice);
-    const totalPrice = amtToken * tokenPrice;
-    const user = User.findOne({ phoneNumber }).exec();
+    totalPrice = parseInt(totalPrice);
+    const user = await User.findOne({ phoneNumber }).exec();
     if (!user) return res.status(404).json({ message: "user not found" });
 
     const result = await axios.post(
@@ -30,7 +33,7 @@ router.post("/purchase", async (req, res) => {
         }
     );
     const newPurchase = new Transactions({
-        purchaseDate: new Date.now(),
+        purchaseDate: new Date(),
         tokenPrice,
         amtToken,
         totalPrice,
