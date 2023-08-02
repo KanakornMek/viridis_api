@@ -31,26 +31,31 @@ router.get("/wallet", async (req, res) => {
 });
 router.get("/generate-cert", async (req, res) => {
   try {
-    const { month, year, userId } = req.body;
-
-    const user = User.findById(userId);
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month - 1, 31, 11, 59, 59);
-    let a = "";
-    const sumTransaction = await Transactions.aggregate([
-      { $match: { userId: userId ,purchaseDate: { $gte: startOfMonth, $lt: endOfMonth } } },
-      { $group: { _id: null, totalSum: { $sum: "$amtToken" } } },
-    ]);
+    const tranId = req.body.transactionId;
+    
+    const tran = await Transactions.findOne({_id:tranId}).exec();
+    
+    const userId= tran.userId;
+ 
+    const user= await User.findOne({_id:userId}).exec();
+    const date =new Date();
+    const month= date.getMonth() +1;
+    
+    const year= date.getFullYear();
+    
+    let monthString = "";
+    
     if (month >= 10) {
-      a = month.toString();
+      monthString = month.toString();
     } else {
-      a = "0" + month.toString();
+      monthString = "0" + month.toString();
     }
     const formData = {
-      cert_number: (year % 100).toString() + a + nanoid(5),
-      name: user.firstname + user.lastname,
-      amt_credit: sumTransaction[0].totalSum.toString(),
+      cert_number: (year % 100).toString() + monthString + nanoid(5),
+      name: user.firstname+' '+user.lastname,
+      amt_credit: (tran.amtToken).toString()
     };
+    console.log(formData.cert_number);
     const certBuffer = await genCert(formData);
     res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
     res.setHeader("Content-Type", "application/pdf");
