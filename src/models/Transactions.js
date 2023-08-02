@@ -8,6 +8,7 @@ const Transactionsschema =new mongoose.Schema({
     point:Number,
     paymentId: String,
     status: String,
+    slipId: String
 })
 const Transactions =mongoose.model('Transaction',Transactionsschema);
 module.exports=Transactions;

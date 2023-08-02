@@ -25,7 +25,7 @@ router.get("/wallet", async (req, res) => {
     if (!wallet) {
       return res.status(404).send();
     }
-    res.send(wallet);
+    res.json({totalPoints: wallet.totalPoints, totalTokens: wallet.totalTokens});
   } catch (err) {
     res.status(500).send(err);
   }
@@ -33,6 +33,7 @@ router.get("/wallet", async (req, res) => {
 
 router.get("/transaction", async (req, res) => {
   try {
+    const PAGE_SIZE = 10;
     const page = parseInt(req.query.page) || 1;
     const transactionCount = await Transactions.countDocuments({ userId: req.user.userId });
     const totalPages = Math.ceil(transactionCount / PAGE_SIZE);
@@ -58,6 +59,7 @@ router.get("/transaction", async (req, res) => {
       transactions: transactions,
     });
   } catch (err) {
+    console.log(err)
     res.status(500).send(err);
   }
 });
