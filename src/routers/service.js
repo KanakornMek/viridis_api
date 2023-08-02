@@ -1,28 +1,31 @@
 const express = require("express");
+const axios = require("axios");
+const {nanoid} =require("nanoid");
+const qs = require("querystring")
 const router = express.Router();
 const User = require("../models/User");
 const wallet = require("../models/Wallet");
 const verifyToken = require("../utils/verifyjwt");
-const qr =require("qrcode")
+const qr = require("qrcode");
+const ServiceAcc = require("../models/ServiceAcc");
+const Transactions = require("../models/Transactions");
 
 router.post("/purchase", async (req, res) => {
-    console.log(req.path)
-
-    let { amtToken, tokenPrice, phoneNumber, sourceId } = req.body;
+    let { amtToken, tokenPrice, totalPrice , phoneNumber, sourceId, type } = req.body;
     if (!req.body.amtToken) return res.status(400).send();
     amtToken = parseInt(amtToken);
     tokenPrice = parseInt(tokenPrice);
-    const totalPrice = amtToken * tokenPrice;
-    const user = User.findOne({phoneNumber})
-    if(!user) return res.status(404).json({message: "user not found"});
-
+    totalPrice = parseInt(totalPrice);
+    const user = await User.findOne({ phoneNumber }).exec();
+    if (!user) return res.status(404).json({ message: "user not found" });
+    const slipId = nanoid(10);
     const result = await axios.post(
         "https://api.omise.co/charges",
         qs.stringify({
             amount: totalPrice * 100,
             currency: "THB",
             source: sourceId,
-            return_uri: "http://localhost:5173/",
+            return_uri: `http://localhost:5173/slip?slipId=${slipId}`,
         }),
         {
             auth: {
@@ -31,7 +34,7 @@ router.post("/purchase", async (req, res) => {
         }
     );
     const newPurchase = new Transactions({
-        purchaseDate: new Date.now(),
+        purchaseDate: new Date(),
         tokenPrice,
         amtToken,
         totalPrice,
@@ -39,8 +42,9 @@ router.post("/purchase", async (req, res) => {
         status: "pending",
         userId: user._id,
         paymentId: result.data.id,
+        slipId,
     });
-    const updateWallet = await wallet.findOne({userId:user._id}).exec();
+    const updateWallet = await wallet.findOne({ userId: user._id }).exec();
     updateWallet.totalPoints += totalPrice;
     updateWallet.totalTokens += amtToken;
     await updateWallet.save()
@@ -53,11 +57,70 @@ router.post("/purchase", async (req, res) => {
     }
 })
 
-router.post("/generateQR", verifyToken , async (req, res) => {
-    const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ message: 'user not found' });
-    if (!user.serviceAcc) return res.status(400).json({ message: 'not a service Account' })
-    const generatedQR = await qr.toDataURL(`http://localhost:5173/qr?serviceId=${user.serviceId}`);
+router.post("/business-register", verifyToken, async (req, res) => {
+    try {
+        const { businessName, businessType } = req.body;
+        const userId = req.user.userId;
+        const newServiceAcc = new ServiceAcc({
+            userId,
+            businessName,
+            businessType
+        })
+
+        await newServiceAcc.save();
+
+        const user = await User.findById(userId).exec()
+        user.isServiceAcc = true;
+        await user.save()
+        res.json({ message: "service account created" })
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500);
+    }
+})
+
+router.get("/", verifyToken, async (req, res) => {
+    try{
+        const isServiceAcc = await ServiceAcc.exists({userId: req.user.userId});
+        if(isServiceAcc) {
+            res.json({ service: true, message: "This is a service account"});
+        } else {
+            res.json({ service: false, message: "Not a service account"})
+        }
+    } catch (err) {
+        res.sendStatus(500)
+    }
+})
+
+router.get("/account", verifyToken, async (req, res) => {
+    try{
+        const serviceAcc = await ServiceAcc.findOne({userId: req.user.userId}).exec();
+        if(!serviceAcc) return res.sendStatus(404)
+        console.log(serviceAcc.businessName);
+        res.json({name: serviceAcc.businessName, type: serviceAcc.businessType})
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500)
+    }
+})
+
+router.get('/info', async (req, res) => {
+    try{
+        console.log(req.query.serviceId)
+        const serviceAcc = await ServiceAcc.findById(req.query.serviceId).exec();
+        if(!serviceAcc) return res.sendStatus(404)
+        console.log(serviceAcc.businessName);
+        res.json({name: serviceAcc.businessName, type: serviceAcc.businessType})
+    } catch (err) {
+        console.log(err)
+        res.sendStatus(500)
+    }
+})
+
+router.post("/generateQR", verifyToken, async (req, res) => {
+    const serviceAcc = await ServiceAcc.findOne({userId:req.user.userId}).exec();
+    if (!serviceAcc) return res.status(404).json({ message: 'user not found' });
+    const generatedQR = await qr.toDataURL(`http://localhost:5173/qr?serviceId=${serviceAcc._id}`);
     res.json({ qrData: generatedQR })
 })
 
