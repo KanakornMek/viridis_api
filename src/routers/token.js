@@ -7,6 +7,13 @@ const Token = require("../models/Token");
 const Transactions = require("../models/Transactions");
 const Wallet = require("../models/Wallet");
 const { nanoid } = require("nanoid");
+require('dotenv').config()
+let baseURL
+if (process.env.NODE_ENV === "development"){
+  baseURL = 'http://localhost:5173'
+} else {
+  baseURL = 'http://35.187.244.241'
+}
 
 router.post("/purchase", async (req, res) => {
   try {
@@ -23,7 +30,7 @@ router.post("/purchase", async (req, res) => {
         amount: totalPrice * 100,
         currency: "THB",
         source: sourceId,
-        return_uri: `http://localhost:5173/slip?slipId=${slipId}`
+        return_uri: `${baseURL}/slip?slipId=${slipId}`
       }),
       {
         auth: {

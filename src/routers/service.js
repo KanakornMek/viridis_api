@@ -9,6 +9,13 @@ const verifyToken = require("../utils/verifyjwt");
 const qr = require("qrcode");
 const ServiceAcc = require("../models/ServiceAcc");
 const Transactions = require("../models/Transactions");
+require('dotenv').config();
+let baseURL;
+if (process.env.NODE_ENV === "development"){
+    baseURL = 'http://localhost:5173'
+} else {
+    baseURL = 'http://35.187.244.241'
+}
 
 router.post("/purchase", async (req, res) => {
     let { amtToken, tokenPrice, totalPrice , phoneNumber, sourceId, type } = req.body;
@@ -25,7 +32,7 @@ router.post("/purchase", async (req, res) => {
             amount: totalPrice * 100,
             currency: "THB",
             source: sourceId,
-            return_uri: `http://localhost:5173/slip?slipId=${slipId}`,
+            return_uri: `${baseURL}/slip?slipId=${slipId}`,
         }),
         {
             auth: {
@@ -120,7 +127,7 @@ router.get('/info', async (req, res) => {
 router.post("/generateQR", verifyToken, async (req, res) => {
     const serviceAcc = await ServiceAcc.findOne({userId:req.user.userId}).exec();
     if (!serviceAcc) return res.status(404).json({ message: 'user not found' });
-    const generatedQR = await qr.toDataURL(`http://localhost:5173/qr?serviceId=${serviceAcc._id}`);
+    const generatedQR = await qr.toDataURL(`${baseURL}/qr?serviceId=${serviceAcc._id}`);
     res.json({ qrData: generatedQR })
 })
 
