@@ -70,7 +70,7 @@ router.get("/generate-cert", async (req, res) => {
   try {
     const { month, year, userId } = req.body;
 
-    const user = User.findById(userId).exec(s);
+    const user = User.findById(userId).exec();
     const startOfMonth = new Date(year, month - 1, 1);
     const endOfMonth = new Date(year, month - 1, 31, 11, 59, 59);
     let a = "";

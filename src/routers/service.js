@@ -1,5 +1,6 @@
 const express = require("express");
 const axios = require("axios");
+const {nanoid} =require("nanoid");
 const qs = require("querystring")
 const router = express.Router();
 const User = require("../models/User");
@@ -17,14 +18,14 @@ router.post("/purchase", async (req, res) => {
     totalPrice = parseInt(totalPrice);
     const user = await User.findOne({ phoneNumber }).exec();
     if (!user) return res.status(404).json({ message: "user not found" });
-
+    const slipId = nanoid(10);
     const result = await axios.post(
         "https://api.omise.co/charges",
         qs.stringify({
             amount: totalPrice * 100,
             currency: "THB",
             source: sourceId,
-            return_uri: "http://localhost:5173/",
+            return_uri: `http://localhost:5173/slip?slipId=${slipId}`,
         }),
         {
             auth: {
@@ -41,6 +42,7 @@ router.post("/purchase", async (req, res) => {
         status: "pending",
         userId: user._id,
         paymentId: result.data.id,
+        slipId,
     });
     const updateWallet = await wallet.findOne({ userId: user._id }).exec();
     updateWallet.totalPoints += totalPrice;
