@@ -13,7 +13,12 @@ router.get("/profile", async (req, res) => {
     if (!user) {
       return res.status(404).send();
     }
-    res.json(user);
+    res.json({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    });
   } catch (err) {
     res.status(500).send(err);
   }
