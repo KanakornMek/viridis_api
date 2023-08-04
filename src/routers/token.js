@@ -12,7 +12,7 @@ let baseURL
 if (process.env.NODE_ENV === "development"){
   baseURL = 'http://localhost:5173'
 } else {
-  baseURL = 'http://35.187.244.241'
+  baseURL = 'http://viridis.bizineer.com'
 }
 
 router.post("/purchase", async (req, res) => {
@@ -21,8 +21,8 @@ router.post("/purchase", async (req, res) => {
     const userId = req.user.userId;
     if (!req.body.amtToken) return res.status(400).send();
     amtToken = parseInt(amtToken);
-    tokenPrice = parseInt(tokenPrice);
-    totalPrice = parseInt(totalPrice);
+    tokenPrice = parseFloat(tokenPrice);
+    totalPrice = parseFloat(totalPrice);
     const slipId = nanoid(10);
     const result = await axios.post(
       "https://api.omise.co/charges",
