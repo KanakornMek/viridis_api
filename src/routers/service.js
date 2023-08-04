@@ -14,15 +14,15 @@ let baseURL;
 if (process.env.NODE_ENV === "development"){
     baseURL = 'http://localhost:5173'
 } else {
-    baseURL = 'http://35.187.244.241'
+    baseURL = 'http://viridis.bizineer.com'
 }
 
 router.post("/purchase", async (req, res) => {
     let { amtToken, tokenPrice, totalPrice , phoneNumber, sourceId, type } = req.body;
     if (!req.body.amtToken) return res.status(400).send();
     amtToken = parseInt(amtToken);
-    tokenPrice = parseInt(tokenPrice);
-    totalPrice = parseInt(totalPrice);
+    tokenPrice = parseFloat(tokenPrice);
+    totalPrice = parseFloat(totalPrice);
     const user = await User.findOne({ phoneNumber }).exec();
     if (!user) return res.status(404).json({ message: "user not found" });
     const slipId = nanoid(10);
@@ -129,6 +129,12 @@ router.post("/generateQR", verifyToken, async (req, res) => {
     if (!serviceAcc) return res.status(404).json({ message: 'user not found' });
     const generatedQR = await qr.toDataURL(`${baseURL}/qr?serviceId=${serviceAcc._id}`);
     res.json({ qrData: generatedQR })
+})
+
+router.get("/serviceList", verifyToken, async (req, res) => {
+    const serviceAcc = await ServiceAcc.findOne({userId:req.user.userId}).exec();
+    if (!serviceAcc) return res.status(404).json({ message: 'user not found' });
+    const serviceLists = await Transactions.find({serviceId: serviceAcc._i})
 })
 
 module.exports = router;
