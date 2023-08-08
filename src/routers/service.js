@@ -9,6 +9,7 @@ const verifyToken = require("../utils/verifyjwt");
 const qr = require("qrcode");
 const ServiceAcc = require("../models/ServiceAcc");
 const Transactions = require("../models/Transactions");
+const serviceTrans = require("../models/serviceTrans");
 require('dotenv').config();
 let baseURL;
 if (process.env.NODE_ENV === "development"){
@@ -18,7 +19,7 @@ if (process.env.NODE_ENV === "development"){
 }
 
 router.post("/purchase", async (req, res) => {
-    let { amtToken, tokenPrice, totalPrice , phoneNumber, sourceId, type } = req.body;
+    let { amtToken, tokenPrice, totalPrice , phoneNumber, sourceId, type, serviceId } = req.body;
     if (!req.body.amtToken) return res.status(400).send();
     amtToken = parseInt(amtToken);
     tokenPrice = parseFloat(tokenPrice);
@@ -54,8 +55,14 @@ router.post("/purchase", async (req, res) => {
     const updateWallet = await wallet.findOne({ userId: user._id }).exec();
     updateWallet.totalPoints += totalPrice;
     updateWallet.totalTokens += amtToken;
-    await updateWallet.save()
+    await updateWallet.save();
     await newPurchase.save();
+    const newServiceTrans = new serviceTrans({
+        serviceId,
+        amtToken
+    })
+
+    await newServiceTrans.save();
 
     if (type === "promptpay") {
         res.json({ qr_code: result.data.source.scannable_code.image.download_uri });
@@ -131,10 +138,12 @@ router.post("/generateQR", verifyToken, async (req, res) => {
     res.json({ qrData: generatedQR })
 })
 
-router.get("/serviceList", verifyToken, async (req, res) => {
+router.get("/list", verifyToken, async (req, res) => {
     const serviceAcc = await ServiceAcc.findOne({userId:req.user.userId}).exec();
     if (!serviceAcc) return res.status(404).json({ message: 'user not found' });
-    const serviceLists = await Transactions.find({serviceId: serviceAcc._i})
+    const serviceLists = await serviceTrans.find({serviceId: serviceAcc._id});
+    res.json({serviceLists});
 })
+
 
 module.exports = router;

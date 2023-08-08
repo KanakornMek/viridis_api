@@ -29,7 +29,7 @@ app.get("/slip", async (req, res) => {
   const { slipId } = req.query;
   const user = await User.findById(userId).exec();
   const name = user.firstname + ' ' + user.lastname;
-  const transaction = await Transactions.findOne({slipId, userId}).exec();
+  const transaction = await Transactions.findOne({slipId}).exec();
   if(!transaction) return res.status(400).json({message: "transaction not found"})
   const slipBuffer = await createReceiptSlip(slipId, name, transaction.amtToken, transaction.tokenPrice, transaction.totalPrice, transaction.purchaseDate);
   res.set('Content-Type', 'image/png');
