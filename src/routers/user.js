@@ -5,14 +5,20 @@ const Transactions = require("../models/Transactions");
 const Wallet = require("../models/Wallet");
 const genCert = require("../utils/certGen/certGen");
 const { nanoid } = require("nanoid");
+const serviceAcc = require("../models/ServiceAcc");
 
 router.get("/profile", async (req, res) => {
   try {
-    const user = await User.findOne({ _id: req.user.userId });
+    const user = await User.findOne({ _id: req.user.userId }).exec();
     if (!user) {
       return res.status(404).send();
     }
-    res.send(user);
+    res.json({
+      firstname: user.firstname,
+      lastname: user.lastname,
+      email: user.email,
+      phoneNumber: user.phoneNumber
+    });
   } catch (err) {
     res.status(500).send(err);
   }
@@ -20,54 +26,19 @@ router.get("/profile", async (req, res) => {
 
 router.get("/wallet", async (req, res) => {
   try {
-    const wallet = await Wallet.findOne({ userId: req.user.userId });
+    const wallet = await Wallet.findOne({ userId: req.user.userId }).exec();
     if (!wallet) {
       return res.status(404).send();
     }
-    res.send(wallet);
+    res.json({totalPoints: wallet.totalPoints, totalTokens: wallet.totalTokens});
   } catch (err) {
     res.status(500).send(err);
   }
 });
-router.get("/generate-cert", async (req, res) => {
-  try {
-    const tranId = req.body.transactionId;
-    
-    const tran = await Transactions.findOne({_id:tranId}).exec();
-    
-    const userId= tran.userId;
- 
-    const user= await User.findOne({_id:userId}).exec();
-    const date =new Date();
-    const month= date.getMonth() +1;
-    
-    const year= date.getFullYear();
-    
-    let monthString = "";
-    
-    if (month >= 10) {
-      monthString = month.toString();
-    } else {
-      monthString = "0" + month.toString();
-    }
-    const formData = {
-      cert_number: (year % 100).toString() + monthString + nanoid(5),
-      name: user.firstname+' '+user.lastname,
-      amt_credit: (tran.amtToken).toString()
-    };
-    console.log(formData.cert_number);
-    const certBuffer = await genCert(formData);
-    res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
-    res.setHeader("Content-Type", "application/pdf");
-    res.send(certBuffer);
-  } catch (err) {
-    console.log(err);
-    res.status(500).send(err);
 
-  }
-});
 router.get("/transaction", async (req, res) => {
   try {
+    const PAGE_SIZE = 10;
     const page = parseInt(req.query.page) || 1;
     const transactionCount = await Transactions.countDocuments({ userId: req.user.userId });
     const totalPages = Math.ceil(transactionCount / PAGE_SIZE);
@@ -93,8 +64,37 @@ router.get("/transaction", async (req, res) => {
       transactions: transactions,
     });
   } catch (err) {
+    console.log(err)
     res.status(500).send(err);
   }
 });
+
+
+
+router.post("/generate-cert", async (req, res) => {
+  try {
+    const tranId = req.body.transactionId;
+    
+    const tran = await Transactions.findOne({_id:tranId}).exec();
+    if(!tran) return res.status(400).json({message: "transaction not found"});
+    const userId = tran.userId;
+
+    const user = await User.findById(userId).exec();
+
+    const formData = {
+      cert_number: tranId,
+      name: user.firstname+' '+user.lastname,
+      amt_credit: (tran.amtToken).toString()
+    };
+    const certBuffer = await genCert(formData);
+    res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(certBuffer);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send(err);
+  }
+})
+
 
 module.exports = router;

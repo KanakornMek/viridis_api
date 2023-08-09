@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
     firstname: String,
     lastname: String,
-    companyName: String,
+    businessName: String,
     email: {
         type: String, 
         unique: true,
@@ -15,8 +15,7 @@ const userSchema = new Schema({
     verifyToken: String,
     isVerified: Boolean,
     type: String,
-    serviceAcc: Boolean,
-    serviceId: mongoose.Schema.Types.ObjectId,
+    isServiceAcc: Boolean
 })
 
 const User = mongoose.model('User', userSchema, 'Users');
