@@ -50,6 +50,7 @@ router.get("/transaction", async (req, res) => {
     const skipCount = (page - 1) * PAGE_SIZE;
 
     const transactions = await Transactions.find({ userId: req.user.userId })
+      .sort({purchaseDate: -1})
       .skip(skipCount)
       .limit(PAGE_SIZE);
 
@@ -71,27 +72,20 @@ router.get("/transaction", async (req, res) => {
 
 
 
-router.get("/generate-cert", async (req, res) => {
+router.post("/generate-cert", async (req, res) => {
   try {
-    const { month, year, userId } = req.body;
+    const tranId = req.body.transactionId;
+    
+    const tran = await Transactions.findOne({_id:tranId}).exec();
+    if(!tran) return res.status(400).json({message: "transaction not found"});
+    const userId = tran.userId;
 
-    const user = User.findById(userId).exec();
-    const startOfMonth = new Date(year, month - 1, 1);
-    const endOfMonth = new Date(year, month - 1, 31, 11, 59, 59);
-    let a = "";
-    const sumTransaction = await Transactions.aggregate([
-      { $match: { purchaseDate: { $gte: startOfMonth, $lt: endOfMonth } } },
-      { $group: { _id: null, totalSum: { $sum: "$amtToken" } } },
-    ]);
-    if (month >= 10) {
-      a = month.toString();
-    } else {
-      a = "0" + month.toString();
-    }
+    const user = await User.findById(userId).exec();
+
     const formData = {
-      cert_number: (year % 100).toString() + a + nanoid(5),
-      name: user.firstname + user.lastname,
-      amt_credit: sumTransaction[0].totalSum.toString(),
+      cert_number: tranId,
+      name: user.firstname+' '+user.lastname,
+      amt_credit: (tran.amtToken).toString()
     };
     const certBuffer = await genCert(formData);
     res.setHeader("Content-Disposition", "inline; filename=filled_invoice.pdf");
@@ -100,8 +94,8 @@ router.get("/generate-cert", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).send(err);
-
   }
-});
+})
+
 
 module.exports = router;
