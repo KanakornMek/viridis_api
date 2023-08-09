@@ -50,6 +50,7 @@ router.get("/transaction", async (req, res) => {
     const skipCount = (page - 1) * PAGE_SIZE;
 
     const transactions = await Transactions.find({ userId: req.user.userId })
+      .sort({purchaseDate: -1})
       .skip(skipCount)
       .limit(PAGE_SIZE);
 
