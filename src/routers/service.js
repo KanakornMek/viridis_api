@@ -64,6 +64,13 @@ router.post("/purchase", async (req, res) => {
 
     await newServiceTrans.save();
 
+    const addTokenToServiceAcc = await ServiceAcc.findById(serviceId).exec();
+    if(addTokenToServiceAcc.amtToken) {
+        addTokenToServiceAcc.amtToken = 0;
+    }
+
+    addTokenToServiceAcc.amtToken += amtToken
+
     if (type === "promptpay") {
         res.json({ qr_code: result.data.source.scannable_code.image.download_uri });
     } else {
@@ -111,7 +118,7 @@ router.get("/account", verifyToken, async (req, res) => {
         const serviceAcc = await ServiceAcc.findOne({userId: req.user.userId}).exec();
         if(!serviceAcc) return res.sendStatus(404)
         console.log(serviceAcc.businessName);
-        res.json({name: serviceAcc.businessName, type: serviceAcc.businessType})
+        res.json({name: serviceAcc.businessName, type: serviceAcc.businessType, amtToken: serviceAcc.amtToken})
     } catch (err) {
         console.log(err)
         res.sendStatus(500)
