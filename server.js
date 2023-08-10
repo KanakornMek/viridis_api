@@ -19,11 +19,9 @@ mongoose.connect(process.env.MONGO_URL);
 mongoose.connection.on("connected", () => {
   console.log("connected to database");
 });
-app.use("/service", serviceRouter);
-app.use(verifyToken);
 
-app.use("/token", tokenRouter);
-app.use("/user", userRouter);
+
+app.use("/service", serviceRouter);
 app.get("/slip", async (req, res) => {
   const { slipId } = req.query;
   const transaction = await Transactions.findOne({slipId}).exec();
@@ -36,6 +34,11 @@ app.get("/slip", async (req, res) => {
   res.set('Content-Type', 'image/png');
   res.send(slipBuffer);
 })
+app.use(verifyToken);
+
+app.use("/token", tokenRouter);
+app.use("/user", userRouter);
+
 
 app.listen(port, () => {
   console.log(`listening to port ${port}`);
