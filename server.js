@@ -25,12 +25,13 @@ app.use(verifyToken);
 app.use("/token", tokenRouter);
 app.use("/user", userRouter);
 app.get("/slip", async (req, res) => {
-  const userId = req.user.userId;
   const { slipId } = req.query;
-  const user = await User.findById(userId).exec();
-  const name = user.firstname + ' ' + user.lastname;
   const transaction = await Transactions.findOne({slipId}).exec();
-  if(!transaction) return res.status(400).json({message: "transaction not found"})
+  if(!transaction) return res.status(404).json({message: "transaction not found"})
+  const user = await User.findById(transaction.userId)
+  if(!user) return res.status(404).json({message: 'user not found'})
+  const name = user.firstname + ' ' + user.lastname;
+
   const slipBuffer = await createReceiptSlip(slipId, name, transaction.amtToken, transaction.tokenPrice, transaction.totalPrice, transaction.purchaseDate);
   res.set('Content-Type', 'image/png');
   res.send(slipBuffer);
