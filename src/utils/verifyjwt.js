@@ -20,8 +20,7 @@ function verifyToken(req, res, next) {
       next();
     });
   } else {
-    
-    if((req.baseUrl) !== '/slip') res.sendStatus(401);
+    return res.sendStatus(401)
   }
 }
 module.exports = verifyToken;
